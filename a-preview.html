@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vista previa Markdown</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+      .file-buttons { display: flex; gap: 12px; padding: 16px; background: #f8f9fa; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+      .file-btn { padding: 8px 16px; background: #007acc; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+      .file-btn:hover { background: #005a9e; }
+      .file-btn.active { background: #28a745; }
+      main { max-width: 860px; margin: 24px auto; padding: 0 16px 48px; }
+      .doc { line-height: 1.6; }
+      .doc h1, .doc h2, .doc h3 { margin-top: 24px; }
+      .doc pre { background: rgba(127,127,127,0.12); padding: 12px; overflow: auto; border-radius: 6px; }
+      .doc code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .doc img { max-width: 100%; }
+      .status { text-align: center; padding: 12px; color: #666; font-size: 14px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <div class="file-buttons">
+      <button class="file-btn" data-file="storyboard.md">📖 Storyboard</button>
+      <button class="file-btn" data-file="presentacion.md">📊 Presentación</button>
+      <button class="file-btn" data-file="read.md">📄 Read</button>
+      <button class="file-btn" data-file="trivias.md">🎯 Trivias</button>
+    </div>
+    <div class="status" id="status">Selecciona un archivo para ver su contenido</div>
+    <main>
+      <article id="doc" class="doc"></article>
+      <img src="./assets/01-presentacion.png" alt="NASA Farm Navigators Using NASA Data Exploration in Agriculture" style="width: 100%; max-width: 75%;"/>
+      <img src="./assets/02-juego-accion.png" alt="NASA Farm Navigators Using NASA Data Exploration in Agriculture" style="width: 100%; max-width: 75%;"/>
+      <img src="./assets/03-trivia-v1.png" alt="NASA Farm Navigators Using NASA Data Exploration in Agriculture" style="width: 100%; max-width: 75%;"/>
+      <img src="./assets/03-trivia-v2.png" alt="NASA Farm Navigators Using NASA Data Exploration in Agriculture" style="width: 100%; max-width: 75%;"/>
+    </main>
+    <script>
+      async function loadFile(fileName) {
+        const statusEl = document.getElementById('status');
+        const docEl = document.getElementById('doc');
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.file-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-file="${fileName}"]`).classList.add('active');
+        
+        statusEl.textContent = `Cargando ${fileName}…`;
+        
+        try {
+          const res = await fetch(fileName);
+          if (!res.ok) throw new Error(`No se pudo cargar ${fileName}`);
+          const content = await res.text();
+          
+          document.title = `Preview: ${fileName}`;
+          
+          // Renderizar según el tipo de archivo
+          if (fileName.endsWith('.md')) {
+            docEl.innerHTML = marked.parse(content);
+          } else {
+            docEl.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace;">${content}</pre>`;
+          }
+          
+          statusEl.textContent = `📄 ${fileName}`;
+        } catch (err) {
+          statusEl.textContent = `❌ Error: ${err.message}`;
+          docEl.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;">
+            <h3>⚠️ No se pudo cargar el archivo</h3>
+            <p>${err.message}</p>
+            <p><small>Asegúrate de que el archivo esté en la misma carpeta que preview.html</small></p>
+          </div>`;
+        }
+      }
+
+      // Configurar eventos de los botones
+      document.querySelectorAll('.file-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const fileName = btn.getAttribute('data-file');
+          loadFile(fileName);
+        });
+      });
+
+      // Cargar archivo inicial (desde URL o por defecto)
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialFile = urlParams.get('file') || 'storyboard.md';
+      loadFile(initialFile);
+    </script>
+  </body>
+  </html>
